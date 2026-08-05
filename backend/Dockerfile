@@ -32,6 +32,10 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Copy startup script
+COPY start.sh /var/www/start.sh
+RUN chmod +x /var/www/start.sh
 
-EXPOSE 9000
-CMD ["php-fpm"]
+EXPOSE 8000
+CMD ["/var/www/start.sh"]
+
