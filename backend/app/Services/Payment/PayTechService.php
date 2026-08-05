@@ -15,10 +15,11 @@ class PayTechService
 
     public function __construct()
     {
-        $this->apiKey    = config('services.paytech.api_key', env('PAYTECH_API_KEY', ''));
-        $this->apiSecret = config('services.paytech.api_secret', env('PAYTECH_SECRET_KEY', ''));
-        $this->env       = config('services.paytech.env', env('PAYTECH_ENV', 'test'));
+        $this->apiKey    = config('services.paytech.api_key') ?: env('PAYTECH_API_KEY', '316f8f01484da3593c8057eb7c17e858407e345bd0930bb22c8bf4b05026d02f');
+        $this->apiSecret = config('services.paytech.api_secret') ?: env('PAYTECH_SECRET_KEY', 'c464e73f73e8b2126c1887a742b13d9a5421f37629e7155ce7c794ceaaea0101');
+        $this->env       = config('services.paytech.env') ?: env('PAYTECH_ENV', 'test');
     }
+
 
     /**
      * Request payment from PayTech API for Wave / Orange Money
