@@ -1,7 +1,9 @@
 #!/bin/sh
 set -e
 
-# Cache config and routes for production performance
+# Clear existing cache and re-cache config/routes for production performance
+php artisan config:clear
+php artisan route:clear
 php artisan config:cache
 php artisan route:cache
 
