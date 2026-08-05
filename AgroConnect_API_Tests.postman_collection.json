@@ -1,0 +1,977 @@
+{
+	"info": {
+		"_postman_id": "8c5bf1be-2bb2-4a0b-8533-5c0293297a7a",
+		"name": "AgroConnect API Tests",
+		"description": "Collection de tests pour l'API de la plateforme AgroConnect. Comprend l'authentification automatique par jeton Bearer.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentification",
+			"description": "Endpoints pour gérer l'inscription, la connexion et le profil utilisateur.",
+			"item": [
+				{
+					"name": "Inscription (Register)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Jeton stocké automatiquement : \" + jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Arona\",\n  \"prenom\": \"Ndiaye\",\n  \"email\": \"arona@test.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\",\n  \"role\": \"client\",\n  \"telephone\": \"771234567\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"register"
+							]
+						},
+						"description": "Inscrire un nouvel utilisateur. Les rôles possibles sont : 'client', 'agriculteur', 'livreur'."
+					},
+					"response": []
+				},
+				{
+					"name": "Connexion (Login)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"    console.log(\"Jeton stocké automatiquement : \" + jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"cheikh@test.com\",\n  \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Se connecter pour obtenir un Bearer token. Par défaut se connecte avec le compte Client 'Cheikh Fall' semé par défaut."
+					},
+					"response": []
+				},
+				{
+					"name": "Profil Utilisateur Connecté",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user"
+							]
+						},
+						"description": "Récupérer les détails de l'utilisateur actuellement connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "Déconnexion (Logout)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "Révoquer le token actuel de l'utilisateur."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Produits",
+			"description": "Endpoints pour la gestion des produits (catalogue public, ajout/modification par agriculteur).",
+			"item": [
+				{
+					"name": "Liste des Produits (Catalogue)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produits?search=&categorie=&prix_max=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"produits"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "",
+									"description": "Nom du produit à rechercher"
+								},
+								{
+									"key": "categorie",
+									"value": "",
+									"description": "ID de la catégorie"
+								},
+								{
+									"key": "prix_max",
+									"value": "",
+									"description": "Prix maximum"
+								}
+							]
+						},
+						"description": "Récupérer la liste des produits disponibles (stock > 0) avec filtres facultatifs."
+					},
+					"response": []
+				},
+				{
+					"name": "Détail d'un Produit",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produits/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"produits",
+								"1"
+							]
+						},
+						"description": "Afficher les informations détaillées d'un produit spécifique."
+					},
+					"response": []
+				},
+				{
+					"name": "Liste des Agriculteurs Validés",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/agriculteurs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agriculteurs"
+							]
+						},
+						"description": "Récupérer tous les agriculteurs dont le statut est 'validé'."
+					},
+					"response": []
+				},
+				{
+					"name": "Ajouter un Produit (Agriculteur)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Mangues de Casamance\",\n  \"prix\": 1500,\n  \"stock\": 100,\n  \"categorie_id\": 1,\n  \"unite\": \"kg\",\n  \"description\": \"Mangues fraîches, sucrées et juteuses.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produits",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"produits"
+							]
+						},
+						"description": "Ajouter un nouveau produit. Nécessite d'être connecté en tant qu'agriculteur."
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier un Produit (Agriculteur)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"Mangues de Casamance Selectionnées\",\n  \"prix\": 1700,\n  \"stock\": 80\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/produits/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"produits",
+								"1"
+							]
+						},
+						"description": "Modifier les détails d'un produit. Remplacer '1' par l'ID du produit de l'agriculteur."
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer un Produit (Agriculteur)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/produits/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"produits",
+								"1"
+							]
+						},
+						"description": "Supprimer un produit."
+					},
+					"response": []
+				},
+				{
+					"name": "Tableau de Bord (Agriculteur)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/agriculteur/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agriculteur",
+								"dashboard"
+							]
+						},
+						"description": "Obtenir les statistiques de l'agriculteur (revenus, total commandes, total produits, dernières commandes)."
+					},
+					"response": []
+				},
+				{
+					"name": "Commandes reçues (Agriculteur)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/agriculteur/commandes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"agriculteur",
+								"commandes"
+							]
+						},
+						"description": "Obtenir les commandes contenant les produits vendus par cet agriculteur."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Panier",
+			"description": "Endpoints pour gérer le panier d'achat de l'utilisateur connecté.",
+			"item": [
+				{
+					"name": "Consulter le Panier",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/panier",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"panier"
+							]
+						},
+						"description": "Liste de tous les articles actuellement dans le panier de l'utilisateur connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "Ajouter au Panier",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produit_id\": 1,\n  \"quantite\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/panier/ajouter",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"panier",
+								"ajouter"
+							]
+						},
+						"description": "Ajoute un produit au panier ou augmente sa quantité si déjà présent."
+					},
+					"response": []
+				},
+				{
+					"name": "Diminuer Quantité ou Retirer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produit_id\": 1,\n  \"quantite\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/panier/diminuer",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"panier",
+								"diminuer"
+							]
+						},
+						"description": "Diminue la quantité d'un produit dans le panier. Si la quantité tombe à 0, le produit est retiré."
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer un article du panier",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/panier/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"panier",
+								"1"
+							]
+						},
+						"description": "Supprime définitivement un produit du panier en utilisant son produit_id."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Commandes",
+			"description": "Endpoints pour passer et consulter des commandes.",
+			"item": [
+				{
+					"name": "Passer une Commande",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"adresse_livraison\": \"Grand Yoff, Dakar, Sénégal\",\n  \"telephone\": \"771234567\",\n  \"mode_paiement\": \"wave\",\n  \"lignes\": [\n    {\n      \"produit_id\": 1,\n      \"quantite\": 2,\n      \"prix_unitaire\": 1200\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/commandes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"commandes"
+							]
+						},
+						"description": "Passer une commande. Le stock des produits sera décrémenté, le paiement simulé et le panier vidé."
+					},
+					"response": []
+				},
+				{
+					"name": "Liste des Commandes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/commandes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"commandes"
+							]
+						},
+						"description": "Récupérer la liste des commandes. Un client verra ses commandes, un administrateur verra toutes les commandes."
+					},
+					"response": []
+				},
+				{
+					"name": "Détail d'une Commande",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/commandes/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"commandes",
+								"1"
+							]
+						},
+						"description": "Voir les détails d'une commande spécifique par son ID (soumis à restriction d'accès)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Livraisons",
+			"description": "Endpoints pour lister et mettre à jour le statut des livraisons.",
+			"item": [
+				{
+					"name": "Liste des Livraisons",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/livraisons",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"livraisons"
+							]
+						},
+						"description": "Obtenir la liste des livraisons selon le rôle de l'utilisateur connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "Mettre à jour le statut de Livraison",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"livree\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/livraisons/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"livraisons",
+								"1"
+							]
+						},
+						"description": "Mettre à jour le statut. Les statuts valides sont : 'en_attente', 'preparation', 'expediee', 'en_cours', 'livree', 'annulee'."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Administration",
+			"description": "Endpoints réservés aux administrateurs pour la gestion des utilisateurs, les validations d'agriculteurs et statistiques.",
+			"item": [
+				{
+					"name": "Liste des Utilisateurs (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/utilisateurs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"utilisateurs"
+							]
+						},
+						"description": "Récupérer tous les utilisateurs avec leurs profils agricoles s'ils existent."
+					},
+					"response": []
+				},
+				{
+					"name": "Statistiques Globales (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/statistiques",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"statistiques"
+							]
+						},
+						"description": "Statistiques sur le nombre de clients, d'agriculteurs, de produits, de commandes et le revenu total."
+					},
+					"response": []
+				},
+				{
+					"name": "Valider un Agriculteur (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/admin/valider/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"valider",
+								"1"
+							]
+						},
+						"description": "Valider un agriculteur par son ID d'agriculteur."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CommandeController;
 use App\Http\Controllers\Api\PanierController;
 use App\Http\Controllers\Api\LivraisonController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\PayTechController;
 
 // ── Routes publiques ──
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,6 +15,7 @@ Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/produits',  [ProduitController::class, 'index']);
 Route::get('/produits/{id}', [ProduitController::class, 'show']);
 Route::get('/agriculteurs',  [ProduitController::class, 'agriculteurs']);
+Route::post('/paytech/ipn',  [PayTechController::class, 'ipn']);
 
 // ── Routes authentifiées ──
 Route::middleware('auth:sanctum')->group(function () {
@@ -47,4 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/utilisateurs',  [AdminController::class, 'utilisateurs']);
     Route::get('/admin/statistiques',  [AdminController::class, 'statistiques']);
     Route::put('/admin/valider/{id}',  [AdminController::class, 'validerAgriculteur']);
+    Route::get('/admin/produits',      [AdminController::class, 'produits']);
+    Route::delete('/admin/produits/{id}', [AdminController::class, 'supprimerProduit']);
+    Route::get('/admin/commandes',     [AdminController::class, 'commandes']);
 });

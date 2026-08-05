@@ -4,19 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Agriculteur extends Model
+class PanierItem extends Model
 {
+    protected $table = 'panier_items';
+
     protected $fillable = [
         'user_id',
-        'localisation',
-        'latitude',
-        'longitude',
-        'description',
-        'statut_validation',
+        'produit_id',
+        'quantite',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function produit()
+    {
+        return $this->belongsTo(Produit::class);
     }
 }

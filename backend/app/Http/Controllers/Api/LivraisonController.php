@@ -4,31 +4,41 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Livraison;
 
 class LivraisonController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $user = $request->user();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($user->role === 'admin') {
+            $livraisons = Livraison::with('commande.client')->latest()->get();
+        } elseif ($user->role === 'agriculteur') {
+            $agriculteur = $user->agriculteur;
+            $livraisons = Livraison::whereHas('commande.lignesCommande.produit', function ($q) use ($agriculteur) {
+                $q->where('agriculteur_id', $agriculteur->id);
+            })->with(['commande.lignesCommande' => function ($q) use ($agriculteur) {
+                $q->whereHas('produit', function ($qp) use ($agriculteur) {
+                    $qp->where('agriculteur_id', $agriculteur->id);
+                })->with('produit');
+            }, 'commande.client'])->latest()->get();
+        } elseif ($user->role === 'livreur') {
+            $livraisons = Livraison::where(function ($q) use ($user) {
+                $q->where('livreur_id', $user->id)
+                  ->orWhereNull('livreur_id');
+            })->with(['commande.client', 'commande.lignesCommande.produit.agriculteur.user'])->latest()->get();
+        } else {
+            // Client
+            $livraisons = Livraison::whereHas('commande', function ($q) use ($user) {
+                $q->where('client_id', $user->id);
+            })->with('commande.lignesCommande.produit')->latest()->get();
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
+        return response()->json($livraisons);
     }
 
     /**
@@ -36,14 +46,35 @@ class LivraisonController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
-    }
+        $request->validate([
+            'status'     => 'sometimes|string|in:en_attente,preparation,expediee,en_cours,livree,annulee',
+            'livreur_id' => 'nullable|exists:users,id',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $livraison = Livraison::findOrFail($id);
+        $user = $request->user();
+
+        if ($request->has('status')) {
+            $livraison->status = $request->status;
+        }
+
+        if ($request->has('livreur_id')) {
+            $livraison->livreur_id = $request->livreur_id;
+        } elseif ($user && $user->role === 'livreur' && !$livraison->livreur_id) {
+            $livraison->livreur_id = $user->id;
+        }
+
+        $livraison->save();
+
+        // Synchroniser le statut de la commande
+        if ($request->has('status')) {
+            $commande = $livraison->commande;
+            if ($commande) {
+                $commande->statut = $request->status;
+                $commande->save();
+            }
+        }
+
+        return response()->json($livraison->load(['commande.client', 'livreur']));
     }
 }

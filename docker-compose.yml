@@ -1,0 +1,49 @@
+services:
+  # Base de données MySQL
+  db:
+    image: mysql:8.0
+    container_name: agroconnect_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: agroconnect
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: agrouser
+      MYSQL_PASSWORD: agropassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  # Backend Laravel (API)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agroconnect_backend
+    restart: always
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: agroconnect
+      DB_USERNAME: agrouser
+      DB_PASSWORD: agropassword
+    volumes:
+      - ./backend:/var/www
+    depends_on:
+      - db
+
+  # Frontend Angular (Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agroconnect_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

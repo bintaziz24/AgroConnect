@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produit_id')->constrained()->onDelete('cascade');
-            $table->foreignId('agriculteur_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity');
+            $table->foreignId('client_id')->constrained('users')->onDelete('cascade');
+            $table->string('adresse_livraison');
+            $table->string('telephone');
+            $table->string('statut')->default('en_attente'); // en_attente, preparation, expediee, en_cours, livree, annulee
+            $table->decimal('montant_total', 10, 2);
+            $table->string('mode_paiement'); // wave, orange_money, cash, etc.
             $table->timestamps();
         });
     }

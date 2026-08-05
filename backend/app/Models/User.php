@@ -11,7 +11,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,10 +33,26 @@ class User extends Authenticatable
         ];
     }
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'role',
-    'telephone',
-];
+        'name',
+        'email',
+        'password',
+        'role',
+        'telephone',
+        'statut_validation',
+    ];
+
+    public function panierItems()
+    {
+        return $this->hasMany(PanierItem::class);
+    }
+
+    public function commandes()
+    {
+        return $this->hasMany(Commande::class, 'client_id');
+    }
+
+    public function agriculteur()
+    {
+        return $this->hasOne(Agriculteur::class);
+    }
 }

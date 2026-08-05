@@ -12,18 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('produits', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('agriculteur_id')->constrained()->onDelete('cascade');
-        $table->foreignId('categorie_id')->constrained()->onDelete('cascade');
-        $table->string('nom');
-        $table->text('description')->nullable();
-        $table->decimal('prix', 10, 2);
-        $table->integer('stock')->default(0);
-        $table->string('unite')->default('kg');
-        $table->string('photo')->nullable();
-        $table->string('emoji')->nullable();
-        $table->timestamps();
-    });
+            $table->id();
+            $table->foreignId('agriculteur_id')->constrained()->onDelete('cascade');
+            $table->foreignId('categorie_id')->constrained()->onDelete('cascade');
+            $table->string('nom');
+            $table->text('description')->nullable();
+            $table->decimal('prix', 10, 2);
+            $table->integer('stock')->default(0);
+            $table->string('unite')->default('kg');
+            $table->string('photo')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
