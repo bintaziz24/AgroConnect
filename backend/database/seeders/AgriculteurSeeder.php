@@ -18,21 +18,26 @@ class AgriculteurSeeder extends Seeder
         ];
 
         foreach ($agriculteurs as $data) {
-            $user = User::create([
-                'name'      => $data['nom'],
-                'email'     => $data['email'],
-                'password'  => Hash::make('password'),
-                'role'      => 'agriculteur',
-                'telephone' => $data['tel'],
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name'              => $data['nom'],
+                    'password'          => Hash::make('password'),
+                    'role'              => 'agriculteur',
+                    'telephone'         => $data['tel'],
+                    'statut_validation' => 'validé',
+                ]
+            );
 
-            Agriculteur::create([
-                'user_id'           => $user->id,
-                'localisation'      => $data['localisation'],
-                'latitude'          => $data['lat'],
-                'longitude'         => $data['lng'],
-                'statut_validation' => 'validé',
-            ]);
+            Agriculteur::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'localisation'      => $data['localisation'],
+                    'latitude'          => $data['lat'],
+                    'longitude'         => $data['lng'],
+                    'statut_validation' => 'validé',
+                ]
+            );
         }
     }
 }
