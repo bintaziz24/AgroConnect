@@ -143,8 +143,14 @@ class CommandeController extends Controller
             // 7. Vider le panier de l'utilisateur
             $request->user()->panierItems()->delete();
 
-            return response()->json($commande->load(['lignesCommande.produit', 'livraison', 'paiement']), 201);
+            $resData = $commande->load(['lignesCommande.produit', 'livraison', 'paiement'])->toArray();
+            if (!empty($paymentResult['redirect_url'])) {
+                $resData['redirect_url'] = $paymentResult['redirect_url'];
+            }
+
+            return response()->json($resData, 201);
         });
+
     }
 
     /**

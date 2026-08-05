@@ -43,8 +43,9 @@ class PayTechService
                     'command_name'  => $data['command_name'] ?? 'Achat Récoltes Sénégal',
                     'env'           => $this->env,
                     'ipn_url'       => $data['ipn_url'] ?? url('/api/paytech/ipn'),
-                    'success_url'   => $data['success_url'] ?? 'http://localhost:4200/panier?status=success',
-                    'cancel_url'    => $data['cancel_url'] ?? 'http://localhost:4200/panier?status=cancel',
+                    'success_url'   => $data['success_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/commandes?status=success',
+                    'cancel_url'    => $data['cancel_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/panier?status=cancel',
+
                     'custom_field'  => json_encode([
                         'payment_method' => $paymentMethod,
                         'phone'          => $phone,
