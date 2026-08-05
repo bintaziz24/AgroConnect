@@ -31,11 +31,12 @@ class PayTechService
         // Si les clés PayTech sont renseignées dans .env / config, faire l'appel HTTP officiel PayTech API
         if (!empty($this->apiKey) && !empty($this->apiSecret)) {
             try {
-                $response = Http::withHeaders([
+                $response = Http::timeout(5)->withHeaders([
                     'API_KEY'      => $this->apiKey,
                     'API_SECRET'   => $this->apiSecret,
                     'Content-Type' => 'application/json',
                 ])->post($this->baseUrl, [
+
                     'item_name'     => $data['item_name'] ?? 'Commande AgroConnect',
                     'item_price'    => $data['item_price'] ?? 1000,
                     'currency'      => 'XOF',
