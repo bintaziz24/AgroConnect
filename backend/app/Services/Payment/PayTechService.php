@@ -21,16 +21,15 @@ class PayTechService
     }
 
     /**
-     * Request payment from PayTech API for Wave & Orange Money
+     * Request payment from PayTech API strictly targeted for Wave or Orange Money
      */
     public function requestPayment(array $data): array
     {
-        $paymentMethod = strtolower($data['payment_method'] ?? 'wave');
+        $rawMethod = strtolower($data['payment_method'] ?? 'wave');
+        $isWave = str_contains($rawMethod, 'wave') || $rawMethod === 'wv';
+        $targetMethod = $isWave ? 'wave' : 'om';
         $phone = $data['phone'] ?? '';
         $ipnUrl = 'https://agroconnect-backend-bh30.onrender.com/api/paytech/ipn';
-
-        // Restreindre ciblement PayTech aux canaux Wave et Orange Money (om)
-        $targetMethod = ($paymentMethod === 'wave' || $paymentMethod === 'wv') ? 'wave' : (($paymentMethod === 'orange_money' || $paymentMethod === 'om') ? 'om' : 'wave,om');
 
         if (!empty($this->apiKey) && !empty($this->apiSecret)) {
             try {
@@ -47,12 +46,14 @@ class PayTechService
                     'env'                   => $this->env,
                     'target_payment_method' => $targetMethod,
                     'payment_method'        => $targetMethod,
-                    'payment_methods'       => ['wave', 'om'],
+                    'payment_methods'       => [$targetMethod],
+                    'payment_service'       => $targetMethod,
+                    'channel'               => $targetMethod,
                     'ipn_url'               => $data['ipn_url'] ?? $ipnUrl,
                     'success_url'           => $data['success_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/commandes?status=success',
                     'cancel_url'            => $data['cancel_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/panier?status=cancel',
                     'custom_field'          => json_encode([
-                        'payment_method' => $paymentMethod,
+                        'payment_method' => $targetMethod,
                         'phone'          => $phone,
                         'client_name'    => $data['client_name'] ?? ''
                     ]),
@@ -63,6 +64,10 @@ class PayTechService
                     $redUrl = $json['redirect_url'] ?? ($json['redirectUrl'] ?? null);
 
                     if ($redUrl || (isset($json['success']) && $json['success'] == 1)) {
+                        // Forcer l'ouverture directe du canal sélectionné (Wave ou Orange Money) sur la page PayTech
+                        $separator = str_contains($redUrl, '?') ? '&' : '?';
+                        $redUrl .= $separator . "target={$targetMethod}&payment_method={$targetMethod}&channel={$targetMethod}";
+
                         return [
                             'success'        => true,
                             'token'          => $json['token'] ?? null,
@@ -80,7 +85,6 @@ class PayTechService
         }
 
         // Mode Simulation de secours (si pas de connexion PayTech)
-        $isWave = $paymentMethod === 'wave';
         $methodName = $isWave ? 'Wave' : 'Orange Money';
         $prefix = $isWave ? 'WV-' : 'OM-';
         $txId = $prefix . strtoupper(Str::random(12));
@@ -93,7 +97,7 @@ class PayTechService
             'status'         => 'completed',
             'message'        => "Paiement {$methodName} validé avec succès pour le numéro {$phone}.",
             'metadata'       => [
-                'provider'       => $paymentMethod,
+                'provider'       => $targetMethod,
                 'phone'          => $phone,
                 'paytech_active' => !empty($this->apiKey),
                 'env'            => $this->env,
