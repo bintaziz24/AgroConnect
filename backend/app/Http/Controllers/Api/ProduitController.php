@@ -39,9 +39,10 @@ class ProduitController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        if ($user && in_array($user->statut_validation, ['rejeté', 'refusé', 'suspendu', 'en_attente'])) {
-            $msg = $user->statut_validation === 'en_attente'
-                ? 'Votre compte agriculteur est en cours de vérification. Vous ne pouvez pas encore ajouter de produits.'
+        $statut = $user ? ($user->statut_validation ?? ($user->agriculteur->statut_validation ?? 'en_attente')) : 'en_attente';
+        if (in_array($statut, ['rejeté', 'refusé', 'suspendu', 'en_attente'])) {
+            $msg = $statut === 'en_attente'
+                ? 'Votre compte agriculteur est en cours de vérification par l\'administration AgroConnect. Vous pourrez ajouter des produits dès que votre compte sera validé.'
                 : 'Votre compte agriculteur a été rejeté ou suspendu par l\'administration.';
             return response()->json(['message' => $msg], 403);
         }
@@ -59,7 +60,7 @@ class ProduitController extends Controller
             $agriculteur = \App\Models\Agriculteur::create([
                 'user_id'           => auth()->id(),
                 'localisation'      => 'Sénégal',
-                'statut_validation' => auth()->user()->statut_validation ?? 'validé',
+                'statut_validation' => auth()->user()->statut_validation ?? 'en_attente',
             ]);
         }
 
@@ -99,7 +100,7 @@ class ProduitController extends Controller
             $agriculteur = \App\Models\Agriculteur::create([
                 'user_id'           => $user->id,
                 'localisation'      => 'Sénégal',
-                'statut_validation' => $user->statut_validation ?? 'validé',
+                'statut_validation' => $user->statut_validation ?? 'en_attente',
             ]);
         }
 
@@ -110,6 +111,7 @@ class ProduitController extends Controller
                 'produits'            => 0,
                 'dernieres_commandes' => [],
                 'mes_produits'        => [],
+                'statut_validation'   => $user->statut_validation ?? 'en_attente',
             ]);
         }
 
@@ -142,6 +144,7 @@ class ProduitController extends Controller
             'produits'            => count($mesProduits),
             'dernieres_commandes' => $dernieresCommandes,
             'mes_produits'        => $mesProduits,
+            'statut_validation'   => $user->statut_validation ?? ($agriculteur->statut_validation ?? 'en_attente'),
         ]);
     }
 

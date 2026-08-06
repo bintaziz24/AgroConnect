@@ -53,3 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/admin/produits/{id}', [AdminController::class, 'supprimerProduit']);
     Route::get('/admin/commandes',     [AdminController::class, 'commandes']);
 });
+
+// Routes WhatsApp
+use App\Http\Controllers\Api\WhatsAppController;
+Route::get('/whatsapp/config',        [WhatsAppController::class, 'config']);
+Route::post('/whatsapp/lien-commande', [WhatsAppController::class, 'lienCommande']);
+Route::post('/whatsapp/envoyer',       [WhatsAppController::class, 'envoyerNotification']);

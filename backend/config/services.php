@@ -41,4 +41,11 @@ return [
         'env'        => env('PAYTECH_ENV', 'test'),
     ],
 
+    'wossap' => [
+        'api_key'        => env('WOSSAP_API_KEY', ''),
+        'instance_id'    => env('WOSSAP_INSTANCE_ID', ''),
+        'base_url'       => env('WOSSAP_BASE_URL', 'https://wossap.ai/api/v1'),
+        'support_number' => env('WHATSAPP_SUPPORT_NUMBER', '221765512974'),
+    ],
+
 ];
