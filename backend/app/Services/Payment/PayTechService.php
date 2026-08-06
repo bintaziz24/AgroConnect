@@ -21,7 +21,7 @@ class PayTechService
     }
 
     /**
-     * Request payment from PayTech API for Wave / Orange Money
+     * Request payment from PayTech API for Wave & Orange Money
      */
     public function requestPayment(array $data): array
     {
@@ -29,7 +29,9 @@ class PayTechService
         $phone = $data['phone'] ?? '';
         $ipnUrl = 'https://agroconnect-backend-bh30.onrender.com/api/paytech/ipn';
 
-        // Si les clés PayTech sont renseignées dans .env / config, faire l'appel HTTP officiel PayTech API
+        // Restreindre ciblement PayTech aux canaux Wave et Orange Money (om)
+        $targetMethod = ($paymentMethod === 'wave' || $paymentMethod === 'wv') ? 'wave' : (($paymentMethod === 'orange_money' || $paymentMethod === 'om') ? 'om' : 'wave,om');
+
         if (!empty($this->apiKey) && !empty($this->apiSecret)) {
             try {
                 $response = Http::withoutVerifying()->timeout(8)->withHeaders([
@@ -37,16 +39,19 @@ class PayTechService
                     'API_SECRET'   => $this->apiSecret,
                     'Content-Type' => 'application/json',
                 ])->post($this->baseUrl, [
-                    'item_name'     => $data['item_name'] ?? 'Commande AgroConnect',
-                    'item_price'    => $data['item_price'] ?? 1000,
-                    'currency'      => 'XOF',
-                    'ref_command'   => $data['ref_command'] ?? ('AGC-' . time()),
-                    'command_name'  => $data['command_name'] ?? 'Achat Récoltes Sénégal',
-                    'env'           => $this->env,
-                    'ipn_url'       => $data['ipn_url'] ?? $ipnUrl,
-                    'success_url'   => $data['success_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/commandes?status=success',
-                    'cancel_url'    => $data['cancel_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/panier?status=cancel',
-                    'custom_field'  => json_encode([
+                    'item_name'             => $data['item_name'] ?? 'Commande AgroConnect',
+                    'item_price'            => $data['item_price'] ?? 1000,
+                    'currency'              => 'XOF',
+                    'ref_command'           => $data['ref_command'] ?? ('AGC-' . time()),
+                    'command_name'          => $data['command_name'] ?? 'Achat Récoltes Sénégal',
+                    'env'                   => $this->env,
+                    'target_payment_method' => $targetMethod,
+                    'payment_method'        => $targetMethod,
+                    'payment_methods'       => ['wave', 'om'],
+                    'ipn_url'               => $data['ipn_url'] ?? $ipnUrl,
+                    'success_url'           => $data['success_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/commandes?status=success',
+                    'cancel_url'            => $data['cancel_url'] ?? env('FRONTEND_URL', 'https://agroconnect-frontend-mauve.vercel.app') . '/panier?status=cancel',
+                    'custom_field'          => json_encode([
                         'payment_method' => $paymentMethod,
                         'phone'          => $phone,
                         'client_name'    => $data['client_name'] ?? ''
