@@ -20,11 +20,11 @@ class CommandeController extends Controller
         $user = $request->user();
         
         if ($user->role === 'admin') {
-            $commandes = Commande::with(['client', 'lignesCommande.produit', 'livraison.livreur', 'paiement'])
+            $commandes = Commande::with(['client', 'lignesCommande.produit.agriculteur.user', 'livraison.livreur', 'paiement'])
                 ->latest()->get();
         } else {
             $commandes = $user->commandes()
-                ->with(['lignesCommande.produit', 'livraison.livreur', 'paiement'])
+                ->with(['lignesCommande.produit.agriculteur.user', 'livraison.livreur', 'paiement'])
                 ->latest()->get();
         }
 
@@ -143,7 +143,7 @@ class CommandeController extends Controller
             // 7. Vider le panier de l'utilisateur
             $request->user()->panierItems()->delete();
 
-            $resData = $commande->load(['lignesCommande.produit', 'livraison', 'paiement'])->toArray();
+            $resData = $commande->load(['lignesCommande.produit.agriculteur.user', 'livraison', 'paiement'])->toArray();
             if (!empty($paymentResult['redirect_url'])) {
                 $resData['redirect_url'] = $paymentResult['redirect_url'];
             }
