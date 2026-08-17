@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PayTechController;
 // ── Routes publiques ──
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+Route::post('/reinitialiser-mot-de-passe', [AuthController::class, 'reinitialiserMotDePasse']);
 Route::get('/produits',  [ProduitController::class, 'index']);
 Route::get('/produits/{id}', [ProduitController::class, 'show']);
 Route::get('/agriculteurs',  [ProduitController::class, 'agriculteurs']);
@@ -41,9 +42,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/agriculteur/dashboard', [ProduitController::class, 'dashboard']);
     Route::get('/agriculteur/commandes', [CommandeController::class, 'agriculteurCommandes']);
 
-    // Livraison
+    // Livraison & Profil Livreur UML
     Route::get('/livraisons',          [LivraisonController::class, 'index']);
     Route::put('/livraisons/{id}',     [LivraisonController::class, 'update']);
+    Route::get('/livreur/profile',     [LivraisonController::class, 'profile']);
+    Route::put('/livreur/profile',     [LivraisonController::class, 'updateProfile']);
 
     // Admin
     Route::get('/admin/utilisateurs',  [AdminController::class, 'utilisateurs']);
@@ -52,10 +55,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/produits',      [AdminController::class, 'produits']);
     Route::delete('/admin/produits/{id}', [AdminController::class, 'supprimerProduit']);
     Route::get('/admin/commandes',     [AdminController::class, 'commandes']);
+
+    // Discussions / Chat
+    Route::get('/discussions',                 [\App\Http\Controllers\Api\DiscussionController::class, 'index']);
+    Route::post('/discussions',                [\App\Http\Controllers\Api\DiscussionController::class, 'store']);
+    Route::get('/discussions/non-lus/count',   [\App\Http\Controllers\Api\DiscussionController::class, 'compterNonLus']);
+    Route::get('/discussions/{id}',            [\App\Http\Controllers\Api\DiscussionController::class, 'show']);
+    Route::post('/discussions/{id}/messages',  [\App\Http\Controllers\Api\DiscussionController::class, 'envoyerMessage']);
 });
 
 // Routes WhatsApp
 use App\Http\Controllers\Api\WhatsAppController;
-Route::get('/whatsapp/config',        [WhatsAppController::class, 'config']);
-Route::post('/whatsapp/lien-commande', [WhatsAppController::class, 'lienCommande']);
-Route::post('/whatsapp/envoyer',       [WhatsAppController::class, 'envoyerNotification']);
+Route::get('/whatsapp/config',               [WhatsAppController::class, 'config']);
+Route::post('/whatsapp/lien-commande',       [WhatsAppController::class, 'lienCommande']);
+Route::post('/whatsapp/envoyer',             [WhatsAppController::class, 'envoyerNotification']);
+Route::post('/whatsapp/reponse-automatique', [WhatsAppController::class, 'reponseAutomatique']);

@@ -23,14 +23,14 @@ class WhatsAppService
     /**
      * Génère un lien wa.me formaté avec texte encodé pour WhatsApp.
      */
-    public function genererLienWhatsApp(string $telephone, string $message): string
+    public function genererLienWhatsApp(string $telephone, string $message = ''): string
     {
         $cleanPhone = preg_replace('/[^0-9]/', '', $telephone);
         if (!str_starts_with($cleanPhone, '221') && strlen($cleanPhone) === 9) {
             $cleanPhone = '221' . $cleanPhone;
         }
 
-        return 'https://wa.me/' . $cleanPhone . '?text=' . urlencode($message);
+        return 'https://wa.me/' . $cleanPhone;
     }
 
     /**
@@ -56,7 +56,7 @@ class WhatsAppService
 
         try {
             // Envoi HTTP direct vers la passerelle Wossap.ai API
-            $response = Http::withHeaders([
+            $response = Http::timeout(3)->withHeaders([
                 'Authorization' => 'Bearer ' . $this->apiKey,
                 'Accept'        => 'application/json',
                 'Content-Type'  => 'application/json'
@@ -126,5 +126,24 @@ class WhatsAppService
         $msg .= "Merci de faire confiance à l'agriculture locale sénégalaise ! 🇸🇳";
 
         return $msg;
+    }
+
+    /**
+     * Génère la réponse automatique officielle de l'entreprise AgroConnect.
+     */
+    public function obtenirReponseAutomatique(string $type = 'accueil', array $donnees = []): string
+    {
+        switch ($type) {
+            case 'commande':
+                $id = $donnees['id'] ?? 'CMD';
+                return "🤖 *RÉPONSE AUTOMATIQUE AGROCONNECT SÉNÉGAL* 🌾\n\nMerci pour votre commande *#CMD-{$id}* !\nVotre demande a été prise en compte. Notre équipe logistique et nos livreurs partenaires s'en occupent immédiatement.\n\n📍 Sacré-Cœur, Dakar, Sénégal\n📞 Support Client: +221 76 551 29 74";
+
+            case 'produit':
+                $nom = $donnees['nom'] ?? 'produit';
+                return "🤖 *RÉPONSE AUTOMATIQUE AGROCONNECT SÉNÉGAL* 🌾\n\nMerci pour votre intérêt envers nos produits agricoles frais ({$nom}) !\nUn conseiller AgroConnect a bien reçu votre demande et vous répondra dans les plus brefs délais.\n\n📞 WhatsApp Direct: +221 76 551 29 74";
+
+            default:
+                return "🤖 *RÉPONSE AUTOMATIQUE AGROCONNECT SÉNÉGAL* 🌾\n\nBonjour et bienvenue chez AgroConnect !\nNous avons bien reçu votre message. Notre équipe commerciale et nos partenaires traitent votre demande et vous répondront dans les plus brefs délais.\n\n📍 Sacré-Cœur, Dakar, Sénégal\n📞 Service Client: +221 76 551 29 74";
+        }
     }
 }

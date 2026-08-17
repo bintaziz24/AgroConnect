@@ -34,4 +34,27 @@ class Commande extends Model
     {
         return $this->hasOne(Paiement::class, 'commande_id');
     }
+
+    /**
+     * Méthode métier UML : Calculer le montant total de la commande
+     */
+    public function calculerMontantTotal(): float
+    {
+        $total = 0;
+        foreach ($this->lignesCommande as $ligne) {
+            $total += $ligne->calculerSousTotal();
+        }
+        $this->montant_total = $total;
+        $this->save();
+        return (float) $total;
+    }
+
+    /**
+     * Méthode métier UML : Confirmer la commande
+     */
+    public function confirmerCommande(): void
+    {
+        $this->statut = 'confirmée';
+        $this->save();
+    }
 }

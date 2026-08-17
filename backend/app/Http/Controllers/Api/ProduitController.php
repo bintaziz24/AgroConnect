@@ -10,7 +10,7 @@ class ProduitController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Produit::with(['agriculteur.user', 'categorie'])
+        $query = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])
                         ->where('stock', '>', 0);
 
         if ($request->filled('search')) {
@@ -32,7 +32,7 @@ class ProduitController extends Controller
 
     public function show($id)
     {
-        $produit = Produit::with(['agriculteur.user', 'categorie'])->findOrFail($id);
+        $produit = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])->findOrFail($id);
         return response()->json($produit);
     }
 

@@ -15,6 +15,7 @@ class Produit extends Model
         'photo',
         'categorie_id',
         'agriculteur_id',
+        'ferme_id',
     ];
 
     public function categorie()
@@ -27,6 +28,11 @@ class Produit extends Model
         return $this->belongsTo(Agriculteur::class);
     }
 
+    public function ferme()
+    {
+        return $this->belongsTo(Ferme::class);
+    }
+
     public function panierItems()
     {
         return $this->hasMany(PanierItem::class);
@@ -35,5 +41,18 @@ class Produit extends Model
     public function lignesCommande()
     {
         return $this->hasMany(LigneCommande::class);
+    }
+
+    public function avis()
+    {
+        return $this->hasMany(Avis::class);
+    }
+
+    /**
+     * Méthode métier UML : Vérifier la disponibilité en stock
+     */
+    public function verifierStock(int $quantite): bool
+    {
+        return $this->stock >= $quantite;
     }
 }

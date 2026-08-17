@@ -121,4 +121,33 @@ class AuthController extends Controller
         }
         return response()->json(['message' => 'Déconnecté avec succès']);
     }
+
+    /**
+     * Méthode métier UML : Réinitialiser le mot de passe utilisateur
+     */
+    public function reinitialiserMotDePasse(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'email'    => 'required|email|exists:users,email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $user = User::where('email', strtolower(trim($request->email)))->first();
+        if ($user) {
+            $user->password = Hash::make($request->password);
+            $user->save();
+            return response()->json([
+                'message' => 'Votre mot de passe a été réinitialisé avec succès.'
+            ]);
+        }
+
+        return response()->json(['message' => 'Utilisateur introuvable.'], 404);
+    }
 }

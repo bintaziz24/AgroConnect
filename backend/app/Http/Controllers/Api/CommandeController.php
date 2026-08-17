@@ -20,11 +20,11 @@ class CommandeController extends Controller
         $user = $request->user();
         
         if ($user->role === 'admin') {
-            $commandes = Commande::with(['client', 'lignesCommande.produit.agriculteur.user', 'livraison.livreur', 'paiement'])
+            $commandes = Commande::with(['client', 'lignesCommande.produit.agriculteur.user', 'lignesCommande.produit.ferme', 'livraison.livreur', 'paiement.facture'])
                 ->latest()->get();
         } else {
             $commandes = $user->commandes()
-                ->with(['lignesCommande.produit.agriculteur.user', 'livraison.livreur', 'paiement'])
+                ->with(['lignesCommande.produit.agriculteur.user', 'lignesCommande.produit.ferme', 'livraison.livreur', 'paiement.facture'])
                 ->latest()->get();
         }
 
@@ -43,7 +43,7 @@ class CommandeController extends Controller
         $request->validate([
             'adresse_livraison'   => 'required|string|max:255',
             'telephone'           => 'required|string',
-            'mode_paiement'       => 'required|string|in:wave,orange_money,cash',
+            'mode_paiement'       => 'required|string',
             'lignes'              => 'required|array|min:1',
             'lignes.*.produit_id' => 'required|exists:produits,id',
             'lignes.*.quantite'   => 'required|integer|min:1',
@@ -121,12 +121,19 @@ class CommandeController extends Controller
                 ];
             }
 
-            $commande->paiement()->create([
+            $paiement = $commande->paiement()->create([
                 'amount'         => $total_facture,
                 'payment_method' => $request->mode_paiement,
                 'transaction_id' => $paymentResult['transaction_id'] ?? ('TX-' . strtoupper(Str::random(8))),
                 'status'         => $paymentResult['status'] ?? 'pending',
                 'metadata'       => $paymentResult['metadata'] ?? [],
+            ]);
+
+            // Générer la Facture UML
+            $paiement->facture()->create([
+                'numero_facture'  => 'FAC-AGC-' . str_pad($commande->id, 5, '0', STR_PAD_LEFT),
+                'montant_facture' => $total_facture,
+                'date_facture'    => now(),
             ]);
 
             // 5. Ajuster le statut de la commande si le paiement est complété
@@ -140,17 +147,18 @@ class CommandeController extends Controller
                 'status' => ($paymentResult['status'] ?? '') === 'completed' ? 'preparation' : 'en_attente',
             ]);
 
-            // 7. Vider le panier de l'utilisateur
-            $request->user()->panierItems()->delete();
+            // 7. Vider le panier de l'utilisateur uniquement si le paiement est validé immédiatement
+            if (($paymentResult['status'] ?? '') === 'completed' || $request->mode_paiement === 'cash') {
+                $request->user()->panierItems()->delete();
+            }
 
-            $resData = $commande->load(['lignesCommande.produit.agriculteur.user', 'livraison', 'paiement'])->toArray();
+            $resData = $commande->load(['lignesCommande.produit.agriculteur.user', 'livraison', 'paiement.facture'])->toArray();
             if (!empty($paymentResult['redirect_url'])) {
                 $resData['redirect_url'] = $paymentResult['redirect_url'];
             }
 
             return response()->json($resData, 201);
         });
-
     }
 
     /**
@@ -158,7 +166,7 @@ class CommandeController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $commande = Commande::with(['client', 'lignesCommande.produit.agriculteur', 'livraison', 'paiement'])
+        $commande = Commande::with(['client', 'lignesCommande.produit.agriculteur', 'livraison', 'paiement.facture'])
             ->findOrFail($id);
 
         $user = $request->user();

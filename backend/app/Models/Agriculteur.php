@@ -19,4 +19,27 @@ class Agriculteur extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function fermes()
+    {
+        return $this->hasMany(Ferme::class);
+    }
+
+    public function produits()
+    {
+        return $this->hasMany(Produit::class);
+    }
+
+    /**
+     * Méthode métier UML : Ajouter une récolte / produit
+     */
+    public function ajouterRecolte(array $data): Produit
+    {
+        return $this->produits()->create($data);
+    }
+
+    public function discussions()
+    {
+        return $this->hasMany(Discussion::class, 'agriculteur_id');
+    }
 }

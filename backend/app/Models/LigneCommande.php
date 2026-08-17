@@ -24,4 +24,12 @@ class LigneCommande extends Model
     {
         return $this->belongsTo(Produit::class, 'produit_id');
     }
+
+    /**
+     * Méthode métier UML : Calculer le sous-total de la ligne
+     */
+    public function calculerSousTotal(): float
+    {
+        return (float) ($this->quantite * $this->prix_unitaire);
+    }
 }

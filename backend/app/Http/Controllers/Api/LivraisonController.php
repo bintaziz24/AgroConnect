@@ -54,6 +54,19 @@ class LivraisonController extends Controller
         $livraison = Livraison::findOrFail($id);
         $user = $request->user();
 
+        if ($request->input('action') === 'refuser' || $request->input('status') === 'refusee') {
+            $livraison->livreur_id = null;
+            $livraison->status = 'en_attente';
+            $livraison->save();
+
+            if ($livraison->commande) {
+                $livraison->commande->statut = 'preparation';
+                $livraison->commande->save();
+            }
+
+            return response()->json($livraison);
+        }
+
         if ($request->has('status')) {
             $livraison->status = $request->status;
         }
@@ -76,5 +89,43 @@ class LivraisonController extends Controller
         }
 
         return response()->json($livraison->load(['commande.client', 'livreur']));
+    }
+
+    /**
+     * Obtenir le profil livreur avec immatriculation et disponibilité
+     */
+    public function profile(Request $request)
+    {
+        $user = $request->user();
+        $livreur = \App\Models\Livreur::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'immatriculation_vehicule' => 'DK-8921-AB',
+                'est_valid'                => true,
+                'est_dispo'                => true,
+            ]
+        );
+
+        return response()->json($livreur);
+    }
+
+    /**
+     * Mettre à jour l immatriculation du véhicule ou la disponibilité
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        $livreur = \App\Models\Livreur::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'immatriculation_vehicule' => 'DK-8921-AB',
+                'est_valid'                => true,
+                'est_dispo'                => true,
+            ]
+        );
+
+        $livreur->update($request->only(['immatriculation_vehicule', 'est_dispo']));
+
+        return response()->json($livreur);
     }
 }

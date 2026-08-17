@@ -55,4 +55,27 @@ class User extends Authenticatable
     {
         return $this->hasOne(Agriculteur::class);
     }
+
+    public function livreur()
+    {
+        return $this->hasOne(Livreur::class);
+    }
+
+    public function avis()
+    {
+        return $this->hasMany(Avis::class, 'client_id');
+    }
+
+    public function discussions()
+    {
+        return $this->hasMany(Discussion::class, 'client_id');
+    }
+
+    /**
+     * Méthode métier UML : Modifier profil utilisateur
+     */
+    public function modifierProfil(array $data): bool
+    {
+        return $this->update($data);
+    }
 }

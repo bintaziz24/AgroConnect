@@ -21,8 +21,7 @@ class WhatsAppController extends Controller
     public function config(Request $request)
     {
         $supportNumber = env('WHATSAPP_SUPPORT_NUMBER', '221765512974');
-        $defautMsg = "Bonjour AgroConnect ! Je souhaite obtenir des informations sur vos produits agricoles frais.";
-        $link = $this->whatsAppService->genererLienWhatsApp($supportNumber, $defautMsg);
+        $link = $this->whatsAppService->genererLienWhatsApp($supportNumber);
 
         return response()->json([
             'support_number' => $supportNumber,
@@ -46,7 +45,7 @@ class WhatsAppController extends Controller
 
         $message = $this->whatsAppService->formerMessageCommande($request->all());
         $supportNumber = env('WHATSAPP_SUPPORT_NUMBER', '221765512974');
-        $link = $this->whatsAppService->genererLienWhatsApp($supportNumber, $message);
+        $link = $this->whatsAppService->genererLienWhatsApp($supportNumber);
 
         return response()->json([
             'success' => true,
@@ -67,5 +66,28 @@ class WhatsAppController extends Controller
 
         $res = $this->whatsAppService->envoyerMessageDirect($request->telephone, $request->message);
         return response()->json($res);
+    }
+
+    /**
+     * Obtenir ou envoyer la réponse automatique officielle de l'entreprise.
+     */
+    public function reponseAutomatique(Request $request)
+    {
+        $type = $request->input('type', 'accueil');
+        $donnees = $request->input('donnees', []);
+        $telephone = $request->input('telephone');
+
+        $reponseAuto = $this->whatsAppService->obtenirReponseAutomatique($type, $donnees);
+
+        if (!empty($telephone)) {
+            $res = $this->whatsAppService->envoyerMessageDirect($telephone, $reponseAuto);
+            return response()->json($res);
+        }
+
+        return response()->json([
+            'success'             => true,
+            'entreprise'          => 'AgroConnect Sénégal',
+            'reponse_automatique' => $reponseAuto,
+        ]);
     }
 }
