@@ -199,6 +199,22 @@ class DiscussionController extends Controller
             ->where('est_lu', false)
             ->update(['est_lu' => true]);
 
+        // Dédoublonner les messages automatiques répétés envoyés précédemment
+        if ($discussion->relationLoaded('messages')) {
+            $seen = [];
+            $uniqueMessages = [];
+            foreach ($discussion->messages as $m) {
+                $text = trim($m->contenu ?? '');
+                $isAuto = str_starts_with($text, 'Bonjour') || str_contains($text, 'je suis intéressé par votre produit');
+                $key = $isAuto ? ($m->expediteur_id . '_' . $text) : ('id_' . $m->id);
+                if (!isset($seen[$key])) {
+                    $seen[$key] = true;
+                    $uniqueMessages[] = $m;
+                }
+            }
+            $discussion->setRelation('messages', collect($uniqueMessages));
+        }
+
         return response()->json($discussion);
     }
 
