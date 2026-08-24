@@ -33,7 +33,7 @@ class DiscussionController extends Controller
             'client',
             'agriculteur.user',
             'livreur',
-            'produit',
+            'produit.agriculteur.user',
             'commande',
             'messages' => function ($q) {
                 $q->orderBy('created_at', 'asc')->with('expediteur');
@@ -197,7 +197,7 @@ class DiscussionController extends Controller
             'client',
             'agriculteur.user',
             'livreur',
-            'produit',
+            'produit.agriculteur.user',
             'commande',
             'messages' => function ($q) {
                 $q->orderBy('created_at', 'asc')->with('expediteur');
