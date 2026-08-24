@@ -136,7 +136,14 @@ class ProduitController extends Controller
             })->with('produit');
         }, 'client', 'livraison'])->latest()->take(5)->get();
 
-        $mesProduits = Produit::where('agriculteur_id', $agriculteur->id)->with('categorie')->latest()->get();
+        $mesProduits = Produit::where('agriculteur_id', $agriculteur->id)
+            ->with('categorie')
+            ->latest()
+            ->get()
+            ->unique(function ($p) {
+                return strtolower(trim($p->nom));
+            })
+            ->values();
 
         return response()->json([
             'commandes'           => $totalCommandes,
