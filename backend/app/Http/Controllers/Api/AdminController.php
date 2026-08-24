@@ -16,7 +16,7 @@ class AdminController extends Controller
      */
     public function utilisateurs(Request $request)
     {
-        $users = User::with('agriculteur')->latest()->get();
+        $users = User::with('agriculteur')->latest()->get()->unique('id')->values();
         return response()->json($users);
     }
 
@@ -87,7 +87,7 @@ class AdminController extends Controller
      */
     public function produits(Request $request)
     {
-        $produits = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])->latest()->get();
+        $produits = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])->latest()->get()->unique('id')->values();
         return response()->json($produits);
     }
 
@@ -122,7 +122,7 @@ class AdminController extends Controller
      */
     public function commandes(Request $request)
     {
-        $commandes = Commande::with(['client'])->latest()->take(10)->get();
+        $commandes = Commande::with(['client'])->latest()->take(10)->get()->unique('id')->values();
         return response()->json($commandes);
     }
 }
