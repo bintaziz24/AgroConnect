@@ -87,7 +87,14 @@ class AdminController extends Controller
      */
     public function produits(Request $request)
     {
-        $produits = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])->latest()->get()->unique('id')->values();
+        $produits = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])
+            ->latest()
+            ->get()
+            ->unique(function ($p) {
+                return strtolower(trim($p->nom)) . '-' . $p->agriculteur_id;
+            })
+            ->values();
+
         return response()->json($produits);
     }
 

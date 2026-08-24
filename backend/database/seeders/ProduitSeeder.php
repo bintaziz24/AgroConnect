@@ -56,7 +56,13 @@ class ProduitSeeder extends Seeder
 
         foreach ($produits as $produit) {
             if ($produit['agriculteur_id']) {
-                Produit::create($produit);
+                Produit::firstOrCreate(
+                    [
+                        'agriculteur_id' => $produit['agriculteur_id'],
+                        'nom'            => $produit['nom'],
+                    ],
+                    $produit
+                );
             }
         }
     }
