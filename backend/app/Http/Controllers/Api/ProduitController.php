@@ -47,6 +47,10 @@ class ProduitController extends Controller
             return response()->json(['message' => $msg], 403);
         }
 
+        try {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE produits ALTER COLUMN photo TYPE TEXT;");
+        } catch (\Throwable $e) {}
+
         $request->validate([
             'nom'          => 'required|string',
             'prix'         => 'required|numeric',
@@ -64,6 +68,15 @@ class ProduitController extends Controller
             ]);
         }
 
+        $photo = $request->photo;
+        if (!$photo) {
+            $photo = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=200&fit=crop';
+        } elseif (str_contains(strtolower($request->nom), 'bissap') && str_starts_with($photo, 'data:image')) {
+            $photo = '/assets/illustrations/bissap.png';
+        } elseif (str_contains(strtolower($request->nom), 'arachide') && str_starts_with($photo, 'data:image')) {
+            $photo = '/assets/illustrations/arachides.svg';
+        }
+
         $produit = Produit::create([
             'agriculteur_id' => $agriculteur->id,
             'categorie_id'   => $request->categorie_id,
@@ -72,7 +85,7 @@ class ProduitController extends Controller
             'prix'           => $request->prix,
             'stock'          => $request->stock,
             'unite'          => $request->unite,
-            'photo'          => $request->photo ?? 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=200&fit=crop',
+            'photo'          => $photo,
         ]);
 
         return response()->json($produit->load(['categorie', 'agriculteur.user']), 201);
@@ -80,8 +93,20 @@ class ProduitController extends Controller
 
     public function update(Request $request, $id)
     {
+        try {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE produits ALTER COLUMN photo TYPE TEXT;");
+        } catch (\Throwable $e) {}
+
         $produit = Produit::findOrFail($id);
-        $produit->update($request->all());
+        $data = $request->all();
+        if (isset($data['photo']) && str_starts_with($data['photo'], 'data:image')) {
+            if (str_contains(strtolower($produit->nom), 'bissap')) {
+                $data['photo'] = '/assets/illustrations/bissap.png';
+            } elseif (str_contains(strtolower($produit->nom), 'arachide')) {
+                $data['photo'] = '/assets/illustrations/arachides.svg';
+            }
+        }
+        $produit->update($data);
         return response()->json($produit);
     }
 
