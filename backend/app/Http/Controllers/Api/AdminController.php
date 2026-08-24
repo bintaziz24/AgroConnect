@@ -101,12 +101,20 @@ class AdminController extends Controller
             return response()->json(['message' => 'Produit introuvable.'], 404);
         }
 
-        $produit->delete();
+        try {
+            $produit->panierItems()->delete();
+            $produit->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Produit supprimé avec succès par la modération admin.'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Produit supprimé avec succès par la modération admin.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de supprimer le produit : ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

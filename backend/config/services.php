@@ -39,6 +39,7 @@ return [
         'api_key'    => env('PAYTECH_API_KEY', ''),
         'api_secret' => env('PAYTECH_SECRET_KEY', ''),
         'env'        => env('PAYTECH_ENV', 'test'),
+        'currency'   => env('PAYTECH_CURRENCY', null),
     ],
 
     'wossap' => [

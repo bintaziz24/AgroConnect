@@ -18,14 +18,18 @@ class LivraisonController extends Controller
         if ($user->role === 'admin') {
             $livraisons = Livraison::with('commande.client')->latest()->get();
         } elseif ($user->role === 'agriculteur') {
-            $agriculteur = $user->agriculteur;
-            $livraisons = Livraison::whereHas('commande.lignesCommande.produit', function ($q) use ($agriculteur) {
-                $q->where('agriculteur_id', $agriculteur->id);
-            })->with(['commande.lignesCommande' => function ($q) use ($agriculteur) {
-                $q->whereHas('produit', function ($qp) use ($agriculteur) {
-                    $qp->where('agriculteur_id', $agriculteur->id);
-                })->with('produit');
-            }, 'commande.client'])->latest()->get();
+            $agriculteur = $user->agriculteur ?? \App\Models\Agriculteur::where('user_id', $user->id)->first();
+            if (!$agriculteur) {
+                $livraisons = collect([]);
+            } else {
+                $livraisons = Livraison::whereHas('commande.lignesCommande.produit', function ($q) use ($agriculteur) {
+                    $q->where('agriculteur_id', $agriculteur->id);
+                })->with(['commande.lignesCommande' => function ($q) use ($agriculteur) {
+                    $q->whereHas('produit', function ($qp) use ($agriculteur) {
+                        $qp->where('agriculteur_id', $agriculteur->id);
+                    })->with('produit');
+                }, 'commande.client'])->latest()->get();
+            }
         } elseif ($user->role === 'livreur') {
             $livraisons = Livraison::where(function ($q) use ($user) {
                 $q->where('livreur_id', $user->id)

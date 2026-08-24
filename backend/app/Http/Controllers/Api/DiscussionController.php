@@ -30,11 +30,14 @@ class DiscussionController extends Controller
         $user = $request->user();
 
         $query = Discussion::with([
-            'client:id,name,email,telephone',
-            'agriculteur.user:id,name,email,telephone',
-            'livreur:id,name,email,telephone',
-            'produit:id,nom,image,prix_unitaire,unite_mesure',
-            'commande:id,total,statut',
+            'client',
+            'agriculteur.user',
+            'livreur',
+            'produit',
+            'commande',
+            'messages' => function ($q) {
+                $q->orderBy('created_at', 'asc')->with('expediteur');
+            },
             'dernierMessage'
         ]);
 
@@ -57,7 +60,7 @@ class DiscussionController extends Controller
 
         $discussions = $query->orderByDesc('dernier_message_at')->get();
 
-        // Calculer le nombre de messages non lus pour chaque discussion
+        // Calculer le nombre de messages non lus et dédoublonner pour chaque discussion
         $discussions->transform(function ($discussion) use ($user) {
             $nonLus = Message::where('discussion_id', $discussion->id)
                 ->where('expediteur_id', '!=', $user->id)
@@ -65,6 +68,24 @@ class DiscussionController extends Controller
                 ->count();
 
             $discussion->non_lus_count = $nonLus;
+
+            if ($discussion->relationLoaded('messages')) {
+                $seen = [];
+                $uniqueMessages = [];
+                foreach ($discussion->messages as $m) {
+                    $text = trim($m->contenu ?? '');
+                    $isAutoGreeting = str_contains($text, 'je suis intéressé par votre produit') ||
+                                     str_contains($text, 'question concernant ma commande') ||
+                                     str_contains($text, 'livreur en charge de la livraison');
+                    $key = $isAutoGreeting ? ($m->expediteur_id . '_' . $text) : ('id_' . $m->id);
+                    if (!isset($seen[$key])) {
+                        $seen[$key] = true;
+                        $uniqueMessages[] = $m;
+                    }
+                }
+                $discussion->setRelation('messages', collect($uniqueMessages));
+            }
+
             return $discussion;
         });
 
@@ -155,12 +176,12 @@ class DiscussionController extends Controller
 
         return response()->json(
             $discussion->load([
-                'client:id,name,email,telephone',
-                'agriculteur.user:id,name,email,telephone',
-                'livreur:id,name,email,telephone',
-                'produit:id,nom,image,prix_unitaire,unite_mesure',
-                'commande:id,total,statut',
-                'messages.expediteur:id,name,role'
+                'client',
+                'agriculteur.user',
+                'livreur',
+                'produit',
+                'commande',
+                'messages.expediteur'
             ]),
             201
         );
@@ -173,13 +194,13 @@ class DiscussionController extends Controller
     {
         $user = $request->user();
         $discussion = Discussion::with([
-            'client:id,name,email,telephone',
-            'agriculteur.user:id,name,email,telephone',
-            'livreur:id,name,email,telephone',
-            'produit:id,nom,image,prix_unitaire,unite_mesure',
-            'commande:id,total,statut',
+            'client',
+            'agriculteur.user',
+            'livreur',
+            'produit',
+            'commande',
             'messages' => function ($q) {
-                $q->orderBy('created_at', 'asc')->with('expediteur:id,name,role');
+                $q->orderBy('created_at', 'asc')->with('expediteur');
             }
         ])->findOrFail($id);
 
@@ -205,8 +226,10 @@ class DiscussionController extends Controller
             $uniqueMessages = [];
             foreach ($discussion->messages as $m) {
                 $text = trim($m->contenu ?? '');
-                $isAuto = str_starts_with($text, 'Bonjour') || str_contains($text, 'je suis intéressé par votre produit');
-                $key = $isAuto ? ($m->expediteur_id . '_' . $text) : ('id_' . $m->id);
+                $isAutoGreeting = str_contains($text, 'je suis intéressé par votre produit') ||
+                                 str_contains($text, 'question concernant ma commande') ||
+                                 str_contains($text, 'livreur en charge de la livraison');
+                $key = $isAutoGreeting ? ($m->expediteur_id . '_' . $text) : ('id_' . $m->id);
                 if (!isset($seen[$key])) {
                     $seen[$key] = true;
                     $uniqueMessages[] = $m;
@@ -293,8 +316,15 @@ class DiscussionController extends Controller
             $discussionIds = Discussion::pluck('id');
         } elseif ($user->role === 'livreur') {
             $discussionIds = Discussion::where('livreur_id', $user->id)->pluck('id');
-        } elseif ($user->agriculteur) {
-            $discussionIds = Discussion::where('agriculteur_id', $user->agriculteur->id)->pluck('id');
+        } elseif ($user->role === 'agriculteur' || $user->agriculteur) {
+            $agriId = $user->agriculteur ? $user->agriculteur->id : null;
+            if ($agriId) {
+                $discussionIds = Discussion::where('agriculteur_id', $agriId)->pluck('id');
+            } else {
+                $discussionIds = Discussion::whereHas('agriculteur', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })->pluck('id');
+            }
         } else {
             $discussionIds = Discussion::where('client_id', $user->id)->pluck('id');
         }
