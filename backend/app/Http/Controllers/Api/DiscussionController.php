@@ -62,6 +62,15 @@ class DiscussionController extends Controller
 
         // Calculer le nombre de messages non lus et dédoublonner pour chaque discussion
         $discussions->transform(function ($discussion) use ($user) {
+            // Auto-correct agriculteur_id if previously mismatched with product's real farmer
+            if ($discussion->produit && $discussion->produit->agriculteur_id && $discussion->agriculteur_id != $discussion->produit->agriculteur_id) {
+                $discussion->agriculteur_id = $discussion->produit->agriculteur_id;
+                if ($discussion->produit->agriculteur) {
+                    $discussion->setRelation('agriculteur', $discussion->produit->agriculteur);
+                }
+                DB::table('discussions')->where('id', $discussion->id)->update(['agriculteur_id' => $discussion->produit->agriculteur_id]);
+            }
+
             $nonLus = Message::where('discussion_id', $discussion->id)
                 ->where('expediteur_id', '!=', $user->id)
                 ->where('est_lu', false)
@@ -203,6 +212,15 @@ class DiscussionController extends Controller
                 $q->orderBy('created_at', 'asc')->with('expediteur');
             }
         ])->findOrFail($id);
+
+        // Auto-correct agriculteur_id if previously mismatched with product's real farmer
+        if ($discussion->produit && $discussion->produit->agriculteur_id && $discussion->agriculteur_id != $discussion->produit->agriculteur_id) {
+            $discussion->agriculteur_id = $discussion->produit->agriculteur_id;
+            if ($discussion->produit->agriculteur) {
+                $discussion->setRelation('agriculteur', $discussion->produit->agriculteur);
+            }
+            DB::table('discussions')->where('id', $discussion->id)->update(['agriculteur_id' => $discussion->produit->agriculteur_id]);
+        }
 
         // Vérifier l'accès
         $isClient = $discussion->client_id === $user->id;
