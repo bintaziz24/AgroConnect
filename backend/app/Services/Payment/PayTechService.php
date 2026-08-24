@@ -33,12 +33,8 @@ class PayTechService
 
         $useSimulation = env('PAYTECH_SIMULATION', false) || $this->env === 'simulation';
 
-        $currency = strtoupper(config('services.paytech.currency', env('PAYTECH_CURRENCY', $this->env === 'test' ? 'EUR' : 'XOF')));
+        $currency = strtoupper(config('services.paytech.currency', env('PAYTECH_CURRENCY', 'XOF')));
         $itemPrice = $data['item_price'] ?? 1000;
-
-        if ($currency === 'EUR' && $itemPrice > 500) {
-            $itemPrice = round($itemPrice / 655.957, 2);
-        }
 
         if (!$useSimulation && !empty($this->apiKey) && !empty($this->apiSecret)) {
             try {
