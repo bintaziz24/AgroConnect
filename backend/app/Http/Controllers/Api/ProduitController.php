@@ -8,6 +8,27 @@ use Illuminate\Http\Request;
 
 class ProduitController extends Controller
 {
+    private function autoFixProduitPhotos($produits)
+    {
+        $collection = is_a($produits, \Illuminate\Pagination\LengthAwarePaginator::class) ? $produits->getCollection() : (is_iterable($produits) ? $produits : [$produits]);
+
+        foreach ($collection as $p) {
+            if (!$p || !isset($p->nom)) continue;
+            $nomLower = strtolower($p->nom);
+            if (str_contains($nomLower, 'bissap') || str_contains($nomLower, 'hibiscus')) {
+                if (empty($p->photo) || str_contains($p->photo, 'unsplash') || str_contains($p->photo, 'tea') || !str_contains($p->photo, 'bissap')) {
+                    $p->photo = '/assets/illustrations/bissap.png';
+                    try { \Illuminate\Support\Facades\DB::table('produits')->where('id', $p->id)->update(['photo' => '/assets/illustrations/bissap.png']); } catch (\Throwable $e) {}
+                }
+            } elseif (str_contains($nomLower, 'arachide')) {
+                if (empty($p->photo) || str_contains($p->photo, 'unsplash') || str_contains($p->photo, 'boat') || !str_contains($p->photo, 'arachide')) {
+                    $p->photo = '/assets/illustrations/arachides.svg';
+                    try { \Illuminate\Support\Facades\DB::table('produits')->where('id', $p->id)->update(['photo' => '/assets/illustrations/arachides.svg']); } catch (\Throwable $e) {}
+                }
+            }
+        }
+    }
+
     public function index(Request $request)
     {
         $query = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])
@@ -26,6 +47,7 @@ class ProduitController extends Controller
         }
 
         $produits = $query->latest()->paginate(12);
+        $this->autoFixProduitPhotos($produits);
 
         return response()->json($produits);
     }
@@ -33,6 +55,7 @@ class ProduitController extends Controller
     public function show($id)
     {
         $produit = Produit::with(['agriculteur.user', 'agriculteur.fermes', 'categorie', 'ferme'])->findOrFail($id);
+        $this->autoFixProduitPhotos($produit);
         return response()->json($produit);
     }
 
@@ -169,6 +192,8 @@ class ProduitController extends Controller
                 return strtolower(trim($p->nom));
             })
             ->values();
+
+        $this->autoFixProduitPhotos($mesProduits);
 
         return response()->json([
             'commandes'           => $totalCommandes,
