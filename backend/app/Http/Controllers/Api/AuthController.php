@@ -23,7 +23,7 @@ class AuthController extends Controller
             'email'     => 'required|email|unique:users,email',
             'password'  => 'required|min:8|confirmed',
             'role'      => 'required|in:client,agriculteur,livreur',
-            'telephone' => 'required|string',
+            'telephone' => 'required|string|unique:users,telephone',
         ]);
 
         if ($validator->fails()) {
